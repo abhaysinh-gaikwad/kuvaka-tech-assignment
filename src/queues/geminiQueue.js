@@ -2,12 +2,13 @@ const Queue = require("bull");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const pool = require("../config/db");
 const redis = require("../config/redis");
+require("dotenv").config();
 
 const geminiQueue = new Queue("gemini-queue", {
   redis: { host: process.env.REDIS_HOST, port: process.env.REDIS_PORT }
 });
 
-const genAI = new GoogleGenerativeAI("AIzaSyAhMMrS87vSMFGbpQed4DuDI8SLTgMglC4");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 geminiQueue.process(async (job) => {
   const { chatroomId, userId, message } = job.data;

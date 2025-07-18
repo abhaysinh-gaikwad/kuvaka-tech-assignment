@@ -9,12 +9,25 @@ const {
   getUser
 } = require("../controllers/authController");
 const authMiddleware = require("../middleware/authMiddleware");
+const validate = require("../middleware/validationMiddleware");
+const {
+  signupSchema,
+  sendOTPSchema,
+  verifyOTPSchema,
+  forgotPasswordSchema,
+  changePasswordSchema
+} = require("../validators/authValidators");
 
-router.post("/signup", signup);
-router.post("/send-otp", sendOTP);
-router.post("/verify-otp", verifyOTP);
-router.post("/forgot-password", forgotPassword);
-router.post("/change-password", authMiddleware, changePassword);
+router.post("/signup", validate(signupSchema), signup);
+router.post("/send-otp", validate(sendOTPSchema), sendOTP);
+router.post("/verify-otp", validate(verifyOTPSchema), verifyOTP);
+router.post("/forgot-password", validate(forgotPasswordSchema), forgotPassword);
+router.post(
+  "/change-password",
+  authMiddleware,
+  validate(changePasswordSchema),
+  changePassword
+);
 router.get("/me", authMiddleware, getUser);
 
 module.exports = router;

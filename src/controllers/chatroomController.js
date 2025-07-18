@@ -11,9 +11,17 @@ const createChatroom = async (req, res) => {
       [name, userId]
     );
     await redis.del(`chatrooms:${userId}`);
-    res.status(201).json(chatroom.rows[0]);
+    res.status(201).json({
+      success: true,
+      data: chatroom.rows[0],
+      message: "Chatroom created successfully"
+    });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Create chatroom error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error creating chatroom"
+    });
   }
 };
 
@@ -22,7 +30,11 @@ const getChatrooms = async (req, res) => {
   try {
     const cached = await redis.get(`chatrooms:${userId}`);
     if (cached) {
-      return res.status(200).json(JSON.parse(cached));
+      return res.status(200).json({
+        success: true,
+        data: JSON.parse(cached),
+        message: "Chatrooms retrieved from cache"
+      });
     }
     const chatrooms = await pool.query(
       "SELECT * FROM chatrooms WHERE user_id = $1",
@@ -33,10 +45,18 @@ const getChatrooms = async (req, res) => {
       JSON.stringify(chatrooms.rows),
       "EX",
       600
-    ); 
-    res.status(200).json(chatrooms.rows);
+    );
+    res.status(200).json({
+      success: true,
+      data: chatrooms.rows,
+      message: "Chatrooms retrieved successfully"
+    });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Get chatrooms error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error retrieving chatrooms"
+    });
   }
 };
 
@@ -49,11 +69,22 @@ const getChatroom = async (req, res) => {
       [id, userId]
     );
     if (chatroom.rows.length === 0) {
-      return res.status(404).json({ error: "Chatroom not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Chatroom not found"
+      });
     }
-    res.status(200).json(chatroom.rows[0]);
+    res.status(200).json({
+      success: true,
+      data: chatroom.rows[0],
+      message: "Chatroom retrieved successfully"
+    });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Get chatroom error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error retrieving chatroom"
+    });
   }
 };
 
@@ -66,6 +97,12 @@ const sendMessage = async (req, res) => {
       "SELECT subscription_tier, message_count, last_message_date FROM users WHERE id = $1",
       [userId]
     );
+    if (user.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
     if (
       user.rows[0].subscription_tier === "basic" &&
       user.rows[0].message_count >= 50
@@ -73,7 +110,10 @@ const sendMessage = async (req, res) => {
       const lastMessageDate = new Date(user.rows[0].last_message_date);
       const today = new Date();
       if (lastMessageDate.toDateString() === today.toDateString()) {
-        return res.status(429).json({ error: "Daily message limit reached" });
+        return res.status(429).json({
+          success: false,
+          message: "Daily message limit reached"
+        });
       } else {
         await pool.query("UPDATE users SET message_count = 0 WHERE id = $1", [
           userId
@@ -92,11 +132,66 @@ const sendMessage = async (req, res) => {
     let response = await addToGeminiQueue({ chatroomId: id, userId, message });
     console.log("Response from Gemini API:", response);
     console.log(`Message added to Gemini queue for chatroom ${id}`);
-    res.status(200).json({ message: "Message sent, processing response" });
-    
+    res.status(200).json({
+      success: true,
+      data: {},
+      message: "Message sent, processing response"
+    });
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    console.error("Send message error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error sending message"
+    });
   }
 };
 
-module.exports = { createChatroom, getChatrooms, getChatroom, sendMessage };
+const getMessagesByChatroom = async (req, res) => {
+  const { id } = req.params; // chatroom ID
+  const userId = req.user.userId;
+
+  try {
+    const chatroom = await pool.query(
+      "SELECT * FROM chatrooms WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    if (chatroom.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Chatroom not found"
+      });
+    }
+
+    const messages = await pool.query(
+      `SELECT content, is_user, created_at
+       FROM messages
+       WHERE chatroom_id = $1 AND user_id = $2
+       ORDER BY created_at ASC`,
+      [id, userId]
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        chatroomId: id,
+        messages: messages.rows
+      },
+      message: "Messages retrieved successfully"
+    });
+  } catch (error) {
+    console.error("Get messages error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error retrieving messages"
+    });
+  }
+};
+
+module.exports = {
+  createChatroom,
+  getChatrooms,
+  getChatroom,
+  sendMessage,
+  getMessagesByChatroom
+};
