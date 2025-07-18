@@ -1,0 +1,140 @@
+# # docker-compose.yml
+# version: '3.8'
+
+# services:
+#   app:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       - NODE_ENV=production
+#       - DB_USER=${DB_USER}
+#       - DB_HOST=postgres
+#       - DB_NAME=${DB_NAME}
+#       - DB_PASSWORD=${DB_PASSWORD}
+#       - DB_PORT=${DB_PORT}
+#       - REDIS_HOST=redis
+#       - REDIS_PORT=${REDIS_PORT}
+#       - JWT_SECRET=${JWT_SECRET}
+#       - GEMINI_API_KEY=${GEMINI_API_KEY}
+#       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+#       - STRIPE_PRO_PRICE_ID=${STRIPE_PRO_PRICE_ID}
+#       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+#       - FRONTEND_URL=${FRONTEND_URL}
+#       - PORT=${PORT}
+#     depends_on:
+#       - postgres
+#       - redis
+#     networks:
+#       - app-network
+#     volumes:
+#       - .:/app
+#       - /app/node_modules
+
+#   postgres:
+#     image: postgres:15
+#     environment:
+#       POSTGRES_USER: ${DB_USER}
+#       POSTGRES_PASSWORD: ${DB_PASSWORD}
+#       POSTGRES_DB: ${DB_NAME}
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     networks:
+#       - app-network
+
+#   redis:
+#     image: redis:7
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redis_data:/data
+#     networks:
+#       - app-network
+
+# networks:
+#   app-network:
+#     driver: bridge
+
+# volumes:
+#   postgres_data:
+#   redis_data:
+
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_USER=${DB_USER}
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PRO_PRICE_ID=${STRIPE_PRO_PRICE_ID}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - PORT=${PORT}
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - app-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    command: listen --forward-to http://app:3000/webhook/stripe --api-key ${STRIPE_SECRET_KEY}
+    environment:
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+    networks:
+      - app-network
+    depends_on:
+      - app
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
