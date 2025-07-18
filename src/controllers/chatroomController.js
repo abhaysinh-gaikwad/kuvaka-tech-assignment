@@ -147,7 +147,7 @@ const sendMessage = async (req, res) => {
 };
 
 const getMessagesByChatroom = async (req, res) => {
-  const { id } = req.params; // chatroom ID
+  const { id } = req.params;
   const userId = req.user.userId;
 
   try {
