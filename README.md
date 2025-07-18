@@ -21,15 +21,39 @@ A Node.js-based backend for a chat application with user authentication, chatroo
 - [Troubleshooting](#troubleshooting)
 - [Deployment Notes](#deployment-notes)
 
-## Important Information
 
-- **Purpose**: A backend for a chat application with authentication, chatroom management, and Stripe-based subscriptions, developed for the Kuvaka Tech assignment.
-- **Repository**: [https://github.com/abhaysinh-gaikwad/kuvaka-tech-assignment](https://github.com/abhaysinh-gaikwad/kuvaka-tech-assignment) (sandbox branch).
-- **Deployment**: Hosted on AWS EC2 (t2.micro, Amazon Linux 2) using Docker, accessible at `http://43.204.125.28:3000`.
-- **Postman Collection**: Available at [Gemini Backend Clone Postman Collection](https://blue-firefly-168047.postman.co/workspace/My-Workspace~3db798f1-32e0-4b8e-94cc-87b9c68954c6/collection/37074240-1e11f30c-b91d-453f-b87f-54a4566802a9?action=share&source=collection_link&creator=37074240).
-  - **Note**: Fix the `Get User` endpoint typo (`/user/me` to `/auth/me`) in Postman.
-- **Response Format**: All APIs return `{ success: true, data: {...}, message: "..." }` for success and `{ success: false, message: "..." }` for errors.
-- **Security**: The `.env` file contains sensitive keys (e.g., `STRIPE_SECRET_KEY`, `GEMINI_API_KEY`). Rotate exposed keys and ensure `.env` is not committed to Git.
+## 📌 Important Information
+
+- **Purpose**: Backend for a chat application with authentication, chatroom management, and Stripe-based subscriptions, developed for the Kuvaka Tech assignment.
+
+- **Repository**: [https://github.com/abhaysinh-gaikwad/kuvaka-tech-assignment](https://github.com/abhaysinh-gaikwad/kuvaka-tech-assignment) (sandbox branch)
+
+- **Deployment**: Hosted on AWS EC2 (`t2.micro`, Amazon Linux 2) using Docker  
+  👉 Accessible at: `http://43.204.125.28:3000`
+
+- **Response Format**:  
+  - Success:  
+    ```json
+    {
+      "success": true,
+      "data": { /* ... */ },
+      "message": "..."
+    }
+    ```
+  - Error:  
+    ```json
+    {
+      "success": false,
+      "message": "..."
+    }
+    ```
+
+- **Security**:  
+  - `.env` contains sensitive keys like:
+    - `STRIPE_SECRET_KEY`
+    - `GEMINI_API_KEY`
+  - ⚠️ Make sure `.env` is ignored in `.gitignore`  
+  - 🔁 Rotate any exposed keys immediately
 
 ## Features
 
